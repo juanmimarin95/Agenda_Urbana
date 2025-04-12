@@ -26,8 +26,9 @@
          <Button fx:id="botonRegistrarCita" layoutX="288.0" layoutY="256.0" onAction="#handleSubmit" text="Registrar cita" />
          <TableView fx:id="tableViewTablaCitas" layoutX="107.0" layoutY="303.0" prefHeight="282.0" prefWidth="827.0">
            <columns>
-             <TableColumn prefWidth="75.0" text="C1" />
-             <TableColumn prefWidth="75.0" text="C2" />
+             <TableColumn fx:id="colFecha" text="Fecha" />
+             <TableColumn fx:id="colAsunto" text="Asunto" />
+             <TableColumn fx:id="colLugar" text="Lugar" />
            </columns>
          </TableView>
          <Button fx:id="botonBorrarCita" layoutX="386.0" layoutY="256.0" mnemonicParsing="false" text="Borrar cita" />
@@ -37,6 +38,7 @@
          <Label fx:id="labelMinutos" layoutX="348.0" layoutY="69.0" text="Minutos" />
          <Label fx:id="labelAsunto" layoutX="107.0" layoutY="139.0" text="Asunto" />
          <Label fx:id="labelLugar" layoutX="107.0" layoutY="210.0" text="Lugar" />
+         <Button fx:id="botonLlenarCitas" layoutX="29.0" layoutY="401.0" mnemonicParsing="false" onAction="#leerCitas" prefHeight="71.0" prefWidth="71.0" text="Llenar" />
       </children>
    </AnchorPane>
 </VBox>
