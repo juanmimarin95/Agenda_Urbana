@@ -20,6 +20,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 public class ControladorPrincipal {
 
+	private Cita citaSeleccionada;
+
 	@FXML
 	private Label labelInfo;
 	@FXML
@@ -44,6 +46,15 @@ public class ControladorPrincipal {
 	}
 
 	@FXML
+	public void initialize() {
+		leerCitas();
+
+		tableViewTablaCitas.setOnMouseClicked(event -> {
+			citaSeleccionada = tableViewTablaCitas.getSelectionModel().getSelectedItem();
+		});
+	}
+
+	@FXML
 	public void handleSubmit() {
 
 		LocalTime horasyminutos = LocalTime.of(Integer.parseInt(inputHoras.getText()),
@@ -53,6 +64,8 @@ public class ControladorPrincipal {
 		Cita cita = new Cita(CitaDAO.obtenerIdMasAlto(), fecha, inputAsunto.getText(), inputLugar.getText());
 
 		CitaDAO.crearCita(cita);
+
+		leerCitas();
 	}
 
 	@FXML
@@ -73,11 +86,31 @@ public class ControladorPrincipal {
 	@FXML
 	public void borrarCita() {
 		
+
+		if (citaSeleccionada != null) {
+			CitaDAO.borrarCita(citaSeleccionada.getId());
+		} else {
+			labelInfo.setText("Selecciona un registro");
+		}
+		
+		leerCitas();
 	}
 
 	@FXML
 	public void modificarCita() {
-
+		
+		if (citaSeleccionada != null) {
+			LocalTime horasyminutos = LocalTime.of(Integer.parseInt(inputHoras.getText()),
+					Integer.parseInt(inputMinutos.getText()));
+			LocalDateTime fecha = LocalDateTime.of(datePickerFecha.getValue(), horasyminutos);
+			
+			Cita citaModificada = new Cita(citaSeleccionada.getId(), fecha, inputAsunto.getText(), inputLugar.getText()); 
+			CitaDAO.modificarCita(citaModificada);
+		} else {
+			labelInfo.setText("Selecciona un registro");
+		}
+		
+		leerCitas();
 	}
 
 }

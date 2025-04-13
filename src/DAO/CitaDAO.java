@@ -102,6 +102,7 @@ public class CitaDAO {
 			preparedStatement.setString(3, cita.getLugar());
 			preparedStatement.setInt(4, cita.getId());
 
+			preparedStatement.executeUpdate();
 			System.out.println("Cita modificada correctamente.");
 
 		} catch (SQLException e) {
