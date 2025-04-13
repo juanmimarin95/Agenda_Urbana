@@ -21,7 +21,7 @@ public class Conexion {
 	            
 	            // Crear tabla de ejemplo
 	            String sql = "CREATE TABLE IF NOT EXISTS citas ("
-	                       + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+						+ "id INTEGER PRIMARY KEY AUTOINCREMENT, "
 	                       + "fecha TEXT NOT NULL, "
 	                       + "asunto TEXT NOT NULL,"
 	                       + "lugar TEXT NOT NULL)";

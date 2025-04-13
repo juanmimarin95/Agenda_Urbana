@@ -3,16 +3,18 @@ package agenda_urbana.clases;
 import java.time.LocalDateTime;
 
 public class Cita {
-	
+
+	private int id;
 	private LocalDateTime fecha;
 	private String asunto;
 	private String lugar;
-	
-	public Cita () {
-		
+
+	public Cita() {
+
 	}
-	
-	public Cita (LocalDateTime fecha, String asunto, String lugar) {
+
+	public Cita(int id, LocalDateTime fecha, String asunto, String lugar) {
+		this.id = id;
 		this.fecha = fecha;
 		this.asunto = asunto;
 		this.lugar = lugar;
@@ -42,5 +44,13 @@ public class Cita {
 		this.lugar = lugar;
 	}
 
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
 	
+
 }

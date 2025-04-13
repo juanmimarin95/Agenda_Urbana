@@ -19,7 +19,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 public class ControladorPrincipal {
-	
+
 	@FXML
 	private Label labelInfo;
 	@FXML
@@ -29,42 +29,55 @@ public class ControladorPrincipal {
 	@FXML
 	private TableView<Cita> tableViewTablaCitas;
 	@FXML
-    private TableColumn<Cita, LocalDateTime> colFecha;
-    @FXML
-    private TableColumn<Cita, String> colAsunto;
-    @FXML
-    private TableColumn<Cita, String> colLugar;
+	private TableColumn<Cita, LocalDateTime> colFecha;
+	@FXML
+	private TableColumn<Cita, String> colAsunto;
+	@FXML
+	private TableColumn<Cita, String> colLugar;
+	@FXML
+	private TableColumn<Cita, Integer> colId;
 	@FXML
 	private TextField inputHoras, inputMinutos, inputLugar, inputAsunto;
-	
-	
-	public ControladorPrincipal () {
-		
+
+	public ControladorPrincipal() {
+
 	}
-	
+
 	@FXML
-	public void handleSubmit () {
-		
-		LocalTime horasyminutos = LocalTime.of(Integer.parseInt(inputHoras.getText()), Integer.parseInt(inputMinutos.getText()));
+	public void handleSubmit() {
+
+		LocalTime horasyminutos = LocalTime.of(Integer.parseInt(inputHoras.getText()),
+				Integer.parseInt(inputMinutos.getText()));
 		LocalDateTime fecha = LocalDateTime.of(datePickerFecha.getValue(), horasyminutos);
-		
-		Cita cita = new Cita(fecha, inputAsunto.getText(), inputLugar.getText());
-		
+
+		Cita cita = new Cita(CitaDAO.obtenerIdMasAlto(), fecha, inputAsunto.getText(), inputLugar.getText());
+
 		CitaDAO.crearCita(cita);
 	}
-	
+
 	@FXML
 	public void leerCitas() {
-		
+
 		ArrayList<Cita> citas = CitaDAO.leerCitas();
-		
+
 		ObservableList<Cita> observableCitas = FXCollections.observableArrayList(citas);
-		
+
+		colId.setCellValueFactory(new PropertyValueFactory<>("id"));
 		colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
 		colAsunto.setCellValueFactory(new PropertyValueFactory<>("asunto"));
 		colLugar.setCellValueFactory(new PropertyValueFactory<>("lugar"));
-		
+
 		tableViewTablaCitas.setItems(observableCitas);
+	}
+
+	@FXML
+	public void borrarCita() {
+		
+	}
+
+	@FXML
+	public void modificarCita() {
+
 	}
 
 }

@@ -10,35 +10,57 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="center" spacing="10" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="agenda_urbana.controladores.ControladorPrincipal">
-   <AnchorPane prefHeight="606.0" prefWidth="1001.0">
-      <children>
-          <Label id="labelInfo" fx:id="labelInfo" layoutX="436.0" layoutY="139.0" prefHeight="79.0" prefWidth="445.0" textAlignment="CENTER">
-            <font>
-               <Font size="26.0" />
-            </font>
-         </Label>
-         <DatePicker fx:id="datePickerFecha" layoutX="107.0" layoutY="99.0" />
-         <TextField fx:id="inputHoras" layoutX="295.0" layoutY="99.0" prefHeight="25.0" prefWidth="38.0" />
-         <TextField fx:id="inputMinutos" layoutX="348.0" layoutY="99.0" prefHeight="25.0" prefWidth="38.0" />
-         <TextField fx:id="inputAsunto" layoutX="107.0" layoutY="166.0" />
-         <TextField fx:id="inputLugar" layoutX="107.0" layoutY="231.0" />
-         <Button fx:id="botonRegistrarCita" layoutX="288.0" layoutY="256.0" onAction="#handleSubmit" text="Registrar cita" />
-         <TableView fx:id="tableViewTablaCitas" layoutX="107.0" layoutY="303.0" prefHeight="282.0" prefWidth="827.0">
-           <columns>
-             <TableColumn fx:id="colFecha" text="Fecha" />
-             <TableColumn fx:id="colAsunto" text="Asunto" />
-             <TableColumn fx:id="colLugar" text="Lugar" />
-           </columns>
-         </TableView>
-         <Button fx:id="botonBorrarCita" layoutX="386.0" layoutY="256.0" mnemonicParsing="false" text="Borrar cita" />
-         <Button fx:id="botonModificarCita" layoutX="469.0" layoutY="256.0" mnemonicParsing="false" text="Modificar cita" />
-         <Label fx:id="labelFecha" layoutX="107.0" layoutY="69.0" styleClass="labelFecha" text="Fecha" />
-         <Label fx:id="labelHoras" layoutX="295.0" layoutY="69.0" text="Horas" />
-         <Label fx:id="labelMinutos" layoutX="348.0" layoutY="69.0" text="Minutos" />
-         <Label fx:id="labelAsunto" layoutX="107.0" layoutY="139.0" text="Asunto" />
-         <Label fx:id="labelLugar" layoutX="107.0" layoutY="210.0" text="Lugar" />
-         <Button fx:id="botonLlenarCitas" layoutX="29.0" layoutY="401.0" mnemonicParsing="false" onAction="#leerCitas" prefHeight="71.0" prefWidth="71.0" text="Llenar" />
-      </children>
-   </AnchorPane>
+<VBox alignment="center" spacing="10"
+	xmlns="http://javafx.com/javafx/23.0.1"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="agenda_urbana.controladores.ControladorPrincipal">
+	<AnchorPane prefHeight="606.0" prefWidth="1001.0">
+		<children>
+			<Label id="labelInfo" fx:id="labelInfo" layoutX="436.0"
+				layoutY="139.0" prefHeight="79.0" prefWidth="445.0"
+				textAlignment="CENTER">
+				<font>
+					<Font size="26.0" />
+				</font>
+			</Label>
+			<DatePicker fx:id="datePickerFecha" layoutX="107.0"
+				layoutY="99.0" />
+			<TextField fx:id="inputHoras" layoutX="295.0"
+				layoutY="99.0" prefHeight="25.0" prefWidth="38.0" />
+			<TextField fx:id="inputMinutos" layoutX="348.0"
+				layoutY="99.0" prefHeight="25.0" prefWidth="38.0" />
+			<TextField fx:id="inputAsunto" layoutX="107.0"
+				layoutY="166.0" />
+			<TextField fx:id="inputLugar" layoutX="107.0"
+				layoutY="231.0" />
+			<Button fx:id="botonRegistrarCita" layoutX="288.0"
+				layoutY="256.0" onAction="#handleSubmit" text="Registrar cita" />
+			<TableView fx:id="tableViewTablaCitas" layoutX="107.0"
+				layoutY="303.0" prefHeight="282.0" prefWidth="827.0">
+				<columns>
+					<TableColumn fx:id="colId" text="ID" />
+					<TableColumn fx:id="colFecha" text="Fecha" />
+					<TableColumn fx:id="colAsunto" text="Asunto" />
+					<TableColumn fx:id="colLugar" text="Lugar" />
+				</columns>
+			</TableView>
+			<Button fx:id="botonBorrarCita" layoutX="386.0" onAction="#borrarCita"
+				layoutY="256.0" mnemonicParsing="false" text="Borrar cita" />
+			<Button fx:id="botonModificarCita" onAction="#modificarCita" layoutX="469.0"
+				layoutY="256.0" mnemonicParsing="false" text="Modificar cita" />
+			<Label fx:id="labelFecha" layoutX="107.0" layoutY="69.0"
+				styleClass="labelFecha" text="Fecha" />
+			<Label fx:id="labelHoras" layoutX="295.0" layoutY="69.0"
+				text="Horas" />
+			<Label fx:id="labelMinutos" layoutX="348.0" layoutY="69.0"
+				text="Minutos" />
+			<Label fx:id="labelAsunto" layoutX="107.0" layoutY="139.0"
+				text="Asunto" />
+			<Label fx:id="labelLugar" layoutX="107.0" layoutY="210.0"
+				text="Lugar" />
+			<Button fx:id="botonLlenarCitas" layoutX="29.0"
+				layoutY="401.0" mnemonicParsing="false" onAction="#leerCitas"
+				prefHeight="71.0" prefWidth="71.0" text="Llenar" />
+		</children>
+	</AnchorPane>
 </VBox>
