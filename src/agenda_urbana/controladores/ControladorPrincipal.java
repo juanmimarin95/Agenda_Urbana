@@ -17,6 +17,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.paint.Color;
 
 public class ControladorPrincipal {
 
@@ -53,19 +54,108 @@ public class ControladorPrincipal {
 			citaSeleccionada = tableViewTablaCitas.getSelectionModel().getSelectedItem();
 		});
 	}
+	
+	@FXML
+	public void resetarEstiloBordeRojo(){
+		
+		datePickerFecha.setStyle("");
+		inputHoras.setStyle("");
+		inputMinutos.setStyle("");
+		inputAsunto.setStyle("");
+		inputLugar.setStyle("");
+	}
+	
+	@FXML
+	public boolean validarFormulario() {
+		
+		
+		
+		StringBuilder str = new StringBuilder();
+		boolean comprobacion = true;
+		
+		resetarEstiloBordeRojo();
+		
+		if (datePickerFecha.getEditor().getText().isBlank() || datePickerFecha.getValue() == null ) {
+			str.append("Por favor seleccione la fecha de la cita\n");
+			comprobacion = false;
+			datePickerFecha.setStyle("-fx-border-color: #bf0f23; -fx-border-width: 2px;");
+		}
+		
+		if (inputHoras.getText() == null || inputHoras.getText().isBlank()) {
+			
+			str.append("Por favor introduzca la hora de la cita\n");
+			comprobacion = false;
+			inputHoras.setStyle("-fx-border-color: #bf0f23; -fx-border-width: 2px;");
+			
+		}else {
+			try {
+				int hora = Integer.parseInt(inputHoras.getText());
+				if(hora < 0 || hora > 23) {
+					comprobacion = false;
+					str.append("Introduzca un valor entre 0 y 23\n");
+					inputHoras.setStyle("-fx-border-color: #bf0f23; -fx-border-width: 2px;");
+					
+				}
+				
+			}catch(NumberFormatException e) {
+				str.append("Introduzca un valor numérico\n");
+				inputHoras.setStyle("-fx-border-color: #bf0f23; -fx-border-width: 2px;");
+			}
+		}
+		
+		if (inputMinutos.getText() == null || inputMinutos.getText().isBlank()) {
+			str.append("Introduzca los minutos de la cita\n");
+			inputMinutos.setStyle("-fx-border-color: #bf0f23; -fx-border-width: 2px;");
+			comprobacion = false;
+		}else {
+			try {
+				
+				int minutos = Integer.parseInt(inputMinutos.getText());
+				
+				if(minutos < 0 || minutos > 59) {
+					str.append("Introduzca un valor entre 0 y 59\n");
+					inputMinutos.setStyle("-fx-border-color: #bf0f23; -fx-border-width: 2px;");
+					comprobacion = false;
+					
+				}
+				
+			}catch(NumberFormatException e) {
+				str.append("Introduzca un valor numérico\n");
+				inputMinutos.setStyle("-fx-border-color: #bf0f23; -fx-border-width: 2px;");
+				comprobacion = false;
+			}
+		}
+		if (inputAsunto.getText() == null || inputAsunto.getText().isBlank()) {
+			str.append("Por favor introduzca el asunto de la cita\n");
+			inputAsunto.setStyle("-fx-border-color: #bf0f23; -fx-border-width: 2px;");
+			comprobacion = false;
+		}
+		if (inputLugar.getText() == null || inputLugar.getText().isBlank()) {
+			str.append("Por favor introduzca el lugar de la cita\n");
+			inputLugar.setStyle("-fx-border-color: #bf0f23; -fx-border-width: 2px;");
+			comprobacion = false;
+		}
+		
+		labelInfo.setTextFill(Color.web("#bf0f23"));
+		labelInfo.setText(str.toString());
+		labelInfo.setStyle("");
+		return comprobacion;
+	}
 
 	@FXML
 	public void handleSubmit() {
 
-		LocalTime horasyminutos = LocalTime.of(Integer.parseInt(inputHoras.getText()),
-				Integer.parseInt(inputMinutos.getText()));
-		LocalDateTime fecha = LocalDateTime.of(datePickerFecha.getValue(), horasyminutos);
+		if(validarFormulario()) {
+			LocalTime horasyminutos = LocalTime.of(Integer.parseInt(inputHoras.getText()),
+					Integer.parseInt(inputMinutos.getText()));
+			LocalDateTime fecha = LocalDateTime.of(datePickerFecha.getValue(), horasyminutos);
 
-		Cita cita = new Cita(CitaDAO.obtenerIdMasAlto(), fecha, inputAsunto.getText(), inputLugar.getText());
+			Cita cita = new Cita(CitaDAO.obtenerIdMasAlto(), fecha, inputAsunto.getText(), inputLugar.getText());
 
-		CitaDAO.crearCita(cita);
+			CitaDAO.crearCita(cita);
 
-		leerCitas();
+			leerCitas();
+		}
 	}
 
 	@FXML
@@ -99,18 +189,20 @@ public class ControladorPrincipal {
 	@FXML
 	public void modificarCita() {
 		
-		if (citaSeleccionada != null) {
-			LocalTime horasyminutos = LocalTime.of(Integer.parseInt(inputHoras.getText()),
-					Integer.parseInt(inputMinutos.getText()));
-			LocalDateTime fecha = LocalDateTime.of(datePickerFecha.getValue(), horasyminutos);
+		if (validarFormulario()) {
+			if (citaSeleccionada != null) {
+				LocalTime horasyminutos = LocalTime.of(Integer.parseInt(inputHoras.getText()),
+						Integer.parseInt(inputMinutos.getText()));
+				LocalDateTime fecha = LocalDateTime.of(datePickerFecha.getValue(), horasyminutos);
+				
+				Cita citaModificada = new Cita(citaSeleccionada.getId(), fecha, inputAsunto.getText(), inputLugar.getText()); 
+				CitaDAO.modificarCita(citaModificada);
+			} else {
+				labelInfo.setText("Selecciona un registro");
+			}
 			
-			Cita citaModificada = new Cita(citaSeleccionada.getId(), fecha, inputAsunto.getText(), inputLugar.getText()); 
-			CitaDAO.modificarCita(citaModificada);
-		} else {
-			labelInfo.setText("Selecciona un registro");
+			leerCitas();
 		}
-		
-		leerCitas();
 	}
 
 }
