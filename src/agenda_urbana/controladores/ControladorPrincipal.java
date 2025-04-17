@@ -1,8 +1,13 @@
 package agenda_urbana.controladores;
 
-import java.time.LocalDate;
+import java.awt.AWTException;
+import java.awt.Image;
+import java.awt.SystemTray;
+import java.awt.TrayIcon;
+import java.awt.TrayIcon.MessageType;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
 import DAO.CitaDAO;
@@ -18,6 +23,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.paint.Color;
+import java.awt.image.BufferedImage;
 
 public class ControladorPrincipal {
 
@@ -47,12 +53,53 @@ public class ControladorPrincipal {
 	}
 
 	@FXML
-	public void initialize() {
+	public void initialize() throws AWTException {
 		leerCitas();
-
+		
 		tableViewTablaCitas.setOnMouseClicked(event -> {
 			citaSeleccionada = tableViewTablaCitas.getSelectionModel().getSelectedItem();
 		});
+		
+		if(tableViewTablaCitas.getItems() != null) {
+			for (Cita cita : tableViewTablaCitas.getItems()) {
+				compararFechas(cita.getFecha());
+			}
+		}else {
+			System.out.println("No se pueden comparar las fechas, la tabla esta vacio");
+		}
+		
+	}
+	
+	public void lanzarNotificacionSO (long diasDiferencia) throws AWTException {
+		
+		if (SystemTray.isSupported()) {
+			Image imagen = new BufferedImage (16,16,BufferedImage.TYPE_INT_ARGB);
+			
+			SystemTray bandeja = SystemTray.getSystemTray();
+			TrayIcon iconoBandeja = new TrayIcon (imagen, "Noti de prueba");
+			iconoBandeja.setImageAutoSize(true);
+			bandeja.add(iconoBandeja);
+			
+			if (diasDiferencia == 0) {
+				iconoBandeja.displayMessage("Cita próxima", "Tiene una cita mañana.", MessageType.INFO);
+			}else {
+				iconoBandeja.displayMessage("Cita próxima", "Tiene una cita en: " + diasDiferencia + " dias.", MessageType.INFO);
+			}
+			
+		}else {
+			System.out.println("El sistema no soporta SystemTray.");
+		}
+	}
+	
+	public void compararFechas (LocalDateTime fechaCita) throws AWTException {
+		
+		long diasDiferencia = ChronoUnit.DAYS.between(LocalDateTime.now(), fechaCita );
+		
+		if (diasDiferencia <= 3 && diasDiferencia >= 0) {
+			
+			lanzarNotificacionSO(diasDiferencia);
+		}
+		
 	}
 	
 	@FXML
