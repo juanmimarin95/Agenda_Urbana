@@ -9,9 +9,15 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import DAO.CitaDAO;
 import agenda_urbana.clases.Cita;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -23,11 +29,16 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+
 import java.awt.image.BufferedImage;
+
+
 
 public class ControladorPrincipal {
 
 	private Cita citaSeleccionada;
+	private Map<Integer, ScheduledExecutorService> programadores;
 
 	@FXML
 	private Label labelInfo;
@@ -54,23 +65,42 @@ public class ControladorPrincipal {
 
 	@FXML
 	public void initialize() throws AWTException {
+		
+		programadores = new HashMap<>();
+
 		leerCitas();
 		
 		tableViewTablaCitas.setOnMouseClicked(event -> {
 			citaSeleccionada = tableViewTablaCitas.getSelectionModel().getSelectedItem();
 		});
 		
-		if(tableViewTablaCitas.getItems() != null) {
+		if(tableViewTablaCitas.getItems() != null && !tableViewTablaCitas.getItems().isEmpty()) {
 			for (Cita cita : tableViewTablaCitas.getItems()) {
-				compararFechas(cita.getFecha());
+				if (cita != null) {
+					compararFechas(cita);
+				}
 			}
 		}else {
-			System.out.println("No se pueden comparar las fechas, la tabla esta vacio");
+			System.out.println("No se pueden comparar las fechas, la tabla esta vacia");
 		}
+		
+		// Detectar el cierre de la ventana
+	    Platform.runLater(() -> {
+	        Stage stage = (Stage) tableViewTablaCitas.getScene().getWindow();
+	        stage.setOnCloseRequest(event -> cerrarAplicacion());
+	    });
 		
 	}
 	
-	public void lanzarNotificacionSO (long diasDiferencia) throws AWTException {
+	public void cerrarAplicacion() {
+	    for (ScheduledExecutorService programador : programadores.values()) {
+	        programador.shutdownNow(); // Detiene inmediatamente las tareas
+	    }
+	    programadores.clear();
+	    System.out.println("Todos los programadores han sido detenidos.");
+	}
+	
+	public void lanzarNotificacionSO (String asunto, long diasDiferencia) throws AWTException {
 		
 		if (SystemTray.isSupported()) {
 			Image imagen = new BufferedImage (16,16,BufferedImage.TYPE_INT_ARGB);
@@ -81,9 +111,9 @@ public class ControladorPrincipal {
 			bandeja.add(iconoBandeja);
 			
 			if (diasDiferencia == 0) {
-				iconoBandeja.displayMessage("Cita próxima", "Tiene una cita mañana.", MessageType.INFO);
+				iconoBandeja.displayMessage("Cita próxima", "Tiene una cita mañana " + asunto + ". ", MessageType.INFO);
 			}else {
-				iconoBandeja.displayMessage("Cita próxima", "Tiene una cita en: " + diasDiferencia + " dias.", MessageType.INFO);
+				iconoBandeja.displayMessage("Cita próxima", "Tiene una cita en: " + diasDiferencia + " dias. " + asunto + ".", MessageType.INFO);
 			}
 			
 		}else {
@@ -91,13 +121,31 @@ public class ControladorPrincipal {
 		}
 	}
 	
-	public void compararFechas (LocalDateTime fechaCita) throws AWTException {
+	public void compararFechas (Cita cita) throws AWTException {
 		
-		long diasDiferencia = ChronoUnit.DAYS.between(LocalDateTime.now(), fechaCita );
-		
+		long diasDiferencia = ChronoUnit.DAYS.between(LocalDateTime.now(), cita.getFecha() );
+		long diasDiferenciaEnSegundos = ChronoUnit.SECONDS.between(LocalDateTime.now(), cita.getFecha() );
 		if (diasDiferencia <= 3 && diasDiferencia >= 0) {
-			
-			lanzarNotificacionSO(diasDiferencia);
+			if(!programadores.containsKey(cita.getId())){
+				System.out.println(programadores.toString());
+				ScheduledExecutorService programador = Executors.newScheduledThreadPool(1);
+				
+				Runnable tarea = () -> {
+					try {
+						lanzarNotificacionSO(cita.getAsunto(), diasDiferencia);
+					} catch (AWTException e) {
+						e.printStackTrace();
+					}
+				};
+				
+				programador.scheduleAtFixedRate(tarea, 0, 5, TimeUnit.HOURS);
+				programadores.put(cita.getId(), programador);
+				
+				programador.schedule(() -> {
+					programador.shutdown();
+                    programadores.remove(cita.getId());
+		        }, diasDiferenciaEnSegundos, TimeUnit.SECONDS);
+			}
 		}
 		
 	}
