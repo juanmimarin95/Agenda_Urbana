@@ -52,5 +52,12 @@ public class Cita {
 		this.id = id;
 	}
 	
+	public String toString() {
+		
+		return "Cita el dia " + this.getFecha() + " para " + this.getAsunto() + " en " + this.getLugar() + ".";
+		
+		
+	}
+	
 
 }

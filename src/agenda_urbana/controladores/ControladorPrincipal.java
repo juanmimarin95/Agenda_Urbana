@@ -9,11 +9,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import DAO.CitaDAO;
 import agenda_urbana.clases.Cita;
@@ -21,6 +16,8 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -28,8 +25,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
 
 import java.awt.image.BufferedImage;
 
@@ -38,8 +35,7 @@ import java.awt.image.BufferedImage;
 public class ControladorPrincipal {
 
 	private Cita citaSeleccionada;
-	private Map<Integer, ScheduledExecutorService> programadores;
-
+	
 	@FXML
 	private Label labelInfo;
 	@FXML
@@ -59,14 +55,10 @@ public class ControladorPrincipal {
 	@FXML
 	private TextField inputHoras, inputMinutos, inputLugar, inputAsunto;
 
-	public ControladorPrincipal() {
-
-	}
+	public ControladorPrincipal() {}
 
 	@FXML
 	public void initialize() throws AWTException {
-		
-		programadores = new HashMap<>();
 
 		leerCitas();
 		
@@ -74,81 +66,56 @@ public class ControladorPrincipal {
 			citaSeleccionada = tableViewTablaCitas.getSelectionModel().getSelectedItem();
 		});
 		
+		refrescarCitasYNotificaciones();
+		
+	}
+	
+	public void refrescarCitasYNotificaciones () throws AWTException {
+		
+		StringBuilder listaCitas = new StringBuilder();
+		
+		leerCitas();
+		
 		if(tableViewTablaCitas.getItems() != null && !tableViewTablaCitas.getItems().isEmpty()) {
 			for (Cita cita : tableViewTablaCitas.getItems()) {
 				if (cita != null) {
-					compararFechas(cita);
+					if(compararFechas(cita)) {
+						listaCitas.append(cita.toString() + "\n");
+					}
 				}
 			}
+			lanzarAlertCitasProximas(listaCitas);
 		}else {
 			System.out.println("No se pueden comparar las fechas, la tabla esta vacia");
 		}
+	}
+	
+	public void lanzarAlertCitasProximas (StringBuilder citasProximas) {
 		
-		// Detectar el cierre de la ventana
-	    Platform.runLater(() -> {
-	        Stage stage = (Stage) tableViewTablaCitas.getScene().getWindow();
-	        stage.setOnCloseRequest(event -> cerrarAplicacion());
-	    });
+		String rutaSonidoAlerta = getClass().getResource("/notification-alert.mp3").toExternalForm();
+		AudioClip clip = new AudioClip(rutaSonidoAlerta);
+		
+		Alert alertaCitas = new Alert(AlertType.INFORMATION);
+		
+		alertaCitas.setTitle("Recordatorio de citas próximas");
+		alertaCitas.setHeaderText(null);
+		alertaCitas.setContentText(citasProximas.toString());
+		clip.play();
+		alertaCitas.showAndWait();
 		
 	}
 	
-	public void cerrarAplicacion() {
-	    for (ScheduledExecutorService programador : programadores.values()) {
-	        programador.shutdownNow(); // Detiene inmediatamente las tareas
+	public boolean compararFechas(Cita cita) throws AWTException {
+		boolean citaProxima = false;
+	    long diasDiferencia = ChronoUnit.DAYS.between(LocalDateTime.now(), cita.getFecha());
+
+	    if (diasDiferencia <= 3 && diasDiferencia >= 0) {
+	    	citaProxima = true;
 	    }
-	    programadores.clear();
-	    System.out.println("Todos los programadores han sido detenidos.");
+	    
+	    return citaProxima;
 	}
-	
-	public void lanzarNotificacionSO (String asunto, long diasDiferencia) throws AWTException {
-		
-		if (SystemTray.isSupported()) {
-			Image imagen = new BufferedImage (16,16,BufferedImage.TYPE_INT_ARGB);
-			
-			SystemTray bandeja = SystemTray.getSystemTray();
-			TrayIcon iconoBandeja = new TrayIcon (imagen, "Noti de prueba");
-			iconoBandeja.setImageAutoSize(true);
-			bandeja.add(iconoBandeja);
-			
-			if (diasDiferencia == 0) {
-				iconoBandeja.displayMessage("Cita próxima", "Tiene una cita mañana " + asunto + ". ", MessageType.INFO);
-			}else {
-				iconoBandeja.displayMessage("Cita próxima", "Tiene una cita en: " + diasDiferencia + " dias. " + asunto + ".", MessageType.INFO);
-			}
-			
-		}else {
-			System.out.println("El sistema no soporta SystemTray.");
-		}
-	}
-	
-	public void compararFechas (Cita cita) throws AWTException {
-		
-		long diasDiferencia = ChronoUnit.DAYS.between(LocalDateTime.now(), cita.getFecha() );
-		long diasDiferenciaEnSegundos = ChronoUnit.SECONDS.between(LocalDateTime.now(), cita.getFecha() );
-		if (diasDiferencia <= 3 && diasDiferencia >= 0) {
-			if(!programadores.containsKey(cita.getId())){
-				System.out.println(programadores.toString());
-				ScheduledExecutorService programador = Executors.newScheduledThreadPool(1);
-				
-				Runnable tarea = () -> {
-					try {
-						lanzarNotificacionSO(cita.getAsunto(), diasDiferencia);
-					} catch (AWTException e) {
-						e.printStackTrace();
-					}
-				};
-				
-				programador.scheduleAtFixedRate(tarea, 0, 5, TimeUnit.HOURS);
-				programadores.put(cita.getId(), programador);
-				
-				programador.schedule(() -> {
-					programador.shutdown();
-                    programadores.remove(cita.getId());
-		        }, diasDiferenciaEnSegundos, TimeUnit.SECONDS);
-			}
-		}
-		
-	}
+
 	
 	@FXML
 	public void resetarEstiloBordeRojo(){
@@ -238,7 +205,7 @@ public class ControladorPrincipal {
 	}
 
 	@FXML
-	public void handleSubmit() {
+	public void handleSubmit() throws AWTException {
 
 		if(validarFormulario()) {
 			LocalTime horasyminutos = LocalTime.of(Integer.parseInt(inputHoras.getText()),
@@ -249,7 +216,7 @@ public class ControladorPrincipal {
 
 			CitaDAO.crearCita(cita);
 
-			leerCitas();
+			refrescarCitasYNotificaciones();
 		}
 	}
 
@@ -282,7 +249,7 @@ public class ControladorPrincipal {
 	}
 
 	@FXML
-	public void modificarCita() {
+	public void modificarCita() throws AWTException {
 		
 		if (validarFormulario()) {
 			if (citaSeleccionada != null) {
@@ -296,7 +263,7 @@ public class ControladorPrincipal {
 				labelInfo.setText("Selecciona un registro");
 			}
 			
-			leerCitas();
+			refrescarCitasYNotificaciones();
 		}
 	}
 

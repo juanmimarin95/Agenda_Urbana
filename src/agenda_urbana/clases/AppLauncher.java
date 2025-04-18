@@ -4,13 +4,15 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 public class AppLauncher extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		Parent root = FXMLLoader.load(getClass().getResource("/agenda_urbana/vistas/vistaPrincipal.fxml"));
-		primaryStage.setTitle("Aplicación JavaFX");
+		primaryStage.setTitle("Agenda Urbana");
+		primaryStage.getIcons().add(new Image(getClass().getResource("/iconoAgendaUrbana.png").toString()));
 		primaryStage.setScene(new Scene(root));
 		primaryStage.show();
 	}
