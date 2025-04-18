@@ -1,17 +1,18 @@
 package agenda_urbana.controladores;
 
-import java.awt.AWTException;
-import java.awt.Image;
-import java.awt.SystemTray;
-import java.awt.TrayIcon;
-import java.awt.TrayIcon.MessageType;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import DAO.CitaDAO;
 import agenda_urbana.clases.Cita;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -28,13 +29,12 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
 
-import java.awt.image.BufferedImage;
-
-
 
 public class ControladorPrincipal {
 
 	private Cita citaSeleccionada;
+	private Timeline timeline;
+	private boolean alertMostrado = false;
 	
 	@FXML
 	private Label labelInfo;
@@ -58,7 +58,7 @@ public class ControladorPrincipal {
 	public ControladorPrincipal() {}
 
 	@FXML
-	public void initialize() throws AWTException {
+	public void initialize() {
 
 		leerCitas();
 		
@@ -66,27 +66,35 @@ public class ControladorPrincipal {
 			citaSeleccionada = tableViewTablaCitas.getSelectionModel().getSelectedItem();
 		});
 		
-		refrescarCitasYNotificaciones();
-		
+		periodicidadAlert();
+		Platform.runLater(() ->{
+			refrescarCitasYNotificaciones();
+		});
 	}
 	
-	public void refrescarCitasYNotificaciones () throws AWTException {
-		
-		StringBuilder listaCitas = new StringBuilder();
-		
-		leerCitas();
-		
-		if(tableViewTablaCitas.getItems() != null && !tableViewTablaCitas.getItems().isEmpty()) {
-			for (Cita cita : tableViewTablaCitas.getItems()) {
-				if (cita != null) {
-					if(compararFechas(cita)) {
-						listaCitas.append(cita.toString() + "\n");
+	public void refrescarCitasYNotificaciones () {
+		if (!alertMostrado) {
+			StringBuilder listaCitas = new StringBuilder();
+			
+			leerCitas();
+			
+			if(tableViewTablaCitas.getItems() != null && !tableViewTablaCitas.getItems().isEmpty()) {
+				for (Cita cita : tableViewTablaCitas.getItems()) {
+					if (cita != null) {
+						if(compararFechas(cita)) {
+							listaCitas.append(cita.toString() + "\n");
+						}
 					}
 				}
+				if(listaCitas.length() > 0) {
+					lanzarAlertCitasProximas(listaCitas);
+					alertMostrado = true;
+					
+				}
+				
+			}else {
+				System.out.println("No se pueden comparar las fechas, la tabla esta vacia");
 			}
-			lanzarAlertCitasProximas(listaCitas);
-		}else {
-			System.out.println("No se pueden comparar las fechas, la tabla esta vacia");
 		}
 	}
 	
@@ -101,11 +109,14 @@ public class ControladorPrincipal {
 		alertaCitas.setHeaderText(null);
 		alertaCitas.setContentText(citasProximas.toString());
 		clip.play();
-		alertaCitas.showAndWait();
+		alertaCitas.show();
+		alertaCitas.setOnHidden(event -> {
+			alertMostrado = false;
+		});
 		
 	}
 	
-	public boolean compararFechas(Cita cita) throws AWTException {
+	public boolean compararFechas(Cita cita) {
 		boolean citaProxima = false;
 	    long diasDiferencia = ChronoUnit.DAYS.between(LocalDateTime.now(), cita.getFecha());
 
@@ -115,7 +126,27 @@ public class ControladorPrincipal {
 	    
 	    return citaProxima;
 	}
+	
+	public void periodicidadAlert() {
+		
+	    // Crear el Timeline con un intervalo de 30 segundos
+        timeline = new Timeline(new KeyFrame(Duration.hours(3), event -> {
+            refrescarCitasYNotificaciones();
+        }));
 
+        // Configurar para que se repita indefinidamente
+        timeline.setCycleCount(Timeline.INDEFINITE);
+
+        // Iniciar el Timeline
+        timeline.play();
+    }
+
+    public void detenerTimeline() {
+        if (timeline != null) {
+            timeline.stop();
+            System.out.println("Timeline detenido correctamente.");
+        }
+    }
 	
 	@FXML
 	public void resetarEstiloBordeRojo(){
@@ -129,8 +160,6 @@ public class ControladorPrincipal {
 	
 	@FXML
 	public boolean validarFormulario() {
-		
-		
 		
 		StringBuilder str = new StringBuilder();
 		boolean comprobacion = true;
@@ -205,7 +234,7 @@ public class ControladorPrincipal {
 	}
 
 	@FXML
-	public void handleSubmit() throws AWTException {
+	public void handleSubmit() {
 
 		if(validarFormulario()) {
 			LocalTime horasyminutos = LocalTime.of(Integer.parseInt(inputHoras.getText()),
@@ -249,7 +278,7 @@ public class ControladorPrincipal {
 	}
 
 	@FXML
-	public void modificarCita() throws AWTException {
+	public void modificarCita() {
 		
 		if (validarFormulario()) {
 			if (citaSeleccionada != null) {
