@@ -2,6 +2,8 @@ package agenda_urbana.controladores;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
@@ -9,7 +11,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import DAO.CitaDAO;
+import DAO.ConfiguracionDAO;
 import agenda_urbana.clases.Cita;
+import agenda_urbana.clases.Configuracion;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
@@ -20,8 +24,11 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -35,11 +42,13 @@ public class ControladorPrincipal {
 	private Cita citaSeleccionada;
 	private Timeline timeline;
 	private boolean alertMostrado = false;
+	private static Configuracion configuracion;
+	private DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 	
 	@FXML
-	private Label labelInfo;
+	private Label labelInfo, labelConfigInfo;
 	@FXML
-	private Button botonRegistrarCita, botonBorrarCita, botonModificarCita, botonLlenarCitas;
+	private Button botonRegistrarCita, botonBorrarCita, botonModificarCita, botonLlenarCitas, botonGuardarConfiguracion;
 	@FXML
 	private DatePicker datePickerFecha;
 	@FXML
@@ -54,22 +63,41 @@ public class ControladorPrincipal {
 	private TableColumn<Cita, Integer> colId;
 	@FXML
 	private TextField inputHoras, inputMinutos, inputLugar, inputAsunto;
+	@FXML
+	private ComboBox<Integer> comboTiempoCadaAviso, comboDiasAntelacionAvisar;
+	@FXML
+	private CheckBox checkboxAvisar;
 
 	public ControladorPrincipal() {}
 
 	@FXML
 	public void initialize() {
-
+		
+		configuracion = ConfiguracionDAO.leerConfiguracion();
+		
+		comboTiempoCadaAviso.getItems().addAll(1, 3, 7, 12, 24, 48);
+		comboDiasAntelacionAvisar.getItems().addAll(1,3,5,7,14);
+		
+		refrescarFormularioConfiguracion();
+		
 		leerCitas();
 		
 		tableViewTablaCitas.setOnMouseClicked(event -> {
 			citaSeleccionada = tableViewTablaCitas.getSelectionModel().getSelectedItem();
 		});
 		
-		periodicidadAlert();
-		Platform.runLater(() ->{
-			refrescarCitasYNotificaciones();
-		});
+		if(configuracion.isAvisar()) {
+			periodicidadAlert();
+			Platform.runLater(() ->{
+				refrescarCitasYNotificaciones();
+			});
+		}
+	}
+	
+	public void refrescarFormularioConfiguracion() {
+		comboTiempoCadaAviso.setValue(configuracion.getFrecuenciaAviso());
+		comboDiasAntelacionAvisar.setValue(configuracion.getNumDiasPreviosAviso());
+		checkboxAvisar.setSelected(configuracion.isAvisar());
 	}
 	
 	public void refrescarCitasYNotificaciones () {
@@ -120,7 +148,7 @@ public class ControladorPrincipal {
 		boolean citaProxima = false;
 	    long diasDiferencia = ChronoUnit.DAYS.between(LocalDateTime.now(), cita.getFecha());
 
-	    if (diasDiferencia <= 3 && diasDiferencia >= 0) {
+	    if (diasDiferencia <= configuracion.getNumDiasPreviosAviso() && diasDiferencia >= 0) {
 	    	citaProxima = true;
 	    }
 	    
@@ -129,8 +157,7 @@ public class ControladorPrincipal {
 	
 	public void periodicidadAlert() {
 		
-	    // Crear el Timeline con un intervalo de 30 segundos
-        timeline = new Timeline(new KeyFrame(Duration.hours(3), event -> {
+        timeline = new Timeline(new KeyFrame(Duration.hours(configuracion.getFrecuenciaAviso()), event -> {
             refrescarCitasYNotificaciones();
         }));
 
@@ -260,6 +287,20 @@ public class ControladorPrincipal {
 		colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
 		colAsunto.setCellValueFactory(new PropertyValueFactory<>("asunto"));
 		colLugar.setCellValueFactory(new PropertyValueFactory<>("lugar"));
+		
+		colFecha.setCellFactory(columna -> {
+	        return new TableCell<Cita, LocalDateTime>() {
+	            @Override
+	            protected void updateItem(LocalDateTime fecha, boolean empty) {
+	                super.updateItem(fecha, empty);
+	                if (empty || fecha == null) {
+	                    setText(null);
+	                } else {
+	                    setText(fecha.format(formateador)); // Aplica el formateador
+	                }
+	            }
+	        };
+	    });
 
 		tableViewTablaCitas.setItems(observableCitas);
 	}
@@ -294,6 +335,24 @@ public class ControladorPrincipal {
 			
 			refrescarCitasYNotificaciones();
 		}
+	}
+	
+	@FXML
+	public void guardarConfiguracion () {
+		
+		configuracion.setAvisar(checkboxAvisar.isSelected());
+		configuracion.setNumDiasPreviosAviso(comboDiasAntelacionAvisar.getValue());
+		configuracion.setFrecuenciaAviso(comboTiempoCadaAviso.getValue());
+		
+		if(configuracion.isAvisar()) {
+			
+			periodicidadAlert();
+		}
+		ConfiguracionDAO.modificarConfiguracion(configuracion);
+		
+		labelConfigInfo.setText("Configuración guardada");
+		refrescarFormularioConfiguracion();
+		
 	}
 
 }

@@ -2,6 +2,7 @@ package agenda_urbana.clases;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -20,14 +21,33 @@ public class Conexion {
 	            System.out.println("Conexión establecida con SQLite.");
 	            
 	            // Crear tabla de ejemplo
-	            String sql = "CREATE TABLE IF NOT EXISTS citas ("
+	            String tablaCitas = "CREATE TABLE IF NOT EXISTS citas ("
 						+ "id INTEGER PRIMARY KEY AUTOINCREMENT, "
 	                       + "fecha TEXT NOT NULL, "
 	                       + "asunto TEXT NOT NULL,"
 	                       + "lugar TEXT NOT NULL)";
 	            
 	            Statement stmt = conexion.createStatement();
-	            stmt.execute(sql);
+	            stmt.execute(tablaCitas);
+	            
+	            String tablaConfiguracion = "CREATE TABLE IF NOT EXISTS configuracion ("
+	            		+ "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+	            		+ "AVISAR INTEGER NOT NULL,"
+	            		+ "FRECUENCIA_AVISO INTEGER NOT NULL,"
+	            		+ "NUM_DIAS_PREVIOS_CITA INTEGER)";
+	            
+	            Statement stmt2 = conexion.createStatement();
+	            stmt2.execute(tablaConfiguracion);
+	            
+	            String defaultConfig = "INSERT INTO configuracion (AVISAR, FRECUENCIA_AVISO, NUM_DIAS_PREVIOS_CITA) values (?,?,?)";
+	            
+	            PreparedStatement pstmt = conexion.prepareStatement(defaultConfig);
+	            
+	            pstmt.setInt(1, 1);
+	            pstmt.setInt(2, 3);
+	            pstmt.setInt(3, 3);
+	            
+	            pstmt.executeUpdate();
 	            System.out.println("Conectado correctamente.");
 	        } catch (SQLException e) {
 	            System.out.println("Error de conexión: " + e.getMessage());
