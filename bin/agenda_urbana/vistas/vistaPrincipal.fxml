@@ -33,6 +33,9 @@
             			<TextField fx:id="inputLugar" layoutX="107.0" layoutY="231.0" />
             			<Button fx:id="botonRegistrarCita" layoutX="288.0" layoutY="256.0" onAction="#handleSubmit" text="Registrar cita" />
             			<TableView fx:id="tableViewTablaCitas" layoutX="107.0" layoutY="303.0" prefHeight="282.0" prefWidth="827.0">
+            				<placeholder>
+        						<Label text="No hay citas"/>
+    							</placeholder>
             				<columns>
             					<TableColumn fx:id="colId" text="ID" />
             					<TableColumn fx:id="colFecha" text="Fecha" />

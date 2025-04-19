@@ -3,6 +3,7 @@ package agenda_urbana.clases;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -39,15 +40,22 @@ public class Conexion {
 	            Statement stmt2 = conexion.createStatement();
 	            stmt2.execute(tablaConfiguracion);
 	            
+	            String comprobarRegistro = "SELECT COUNT(*) FROM configuracion";
 	            String defaultConfig = "INSERT INTO configuracion (AVISAR, FRECUENCIA_AVISO, NUM_DIAS_PREVIOS_CITA) values (?,?,?)";
 	            
 	            PreparedStatement pstmt = conexion.prepareStatement(defaultConfig);
 	            
-	            pstmt.setInt(1, 1);
-	            pstmt.setInt(2, 3);
-	            pstmt.setInt(3, 3);
+	            PreparedStatement verificarTablaVacia = conexion.prepareStatement(comprobarRegistro);
+	            ResultSet rs = verificarTablaVacia.executeQuery();
 	            
-	            pstmt.executeUpdate();
+	            if(rs.next() && rs.getInt(1) == 0) {
+	            	pstmt.setInt(1, 1);
+		            pstmt.setInt(2, 3);
+		            pstmt.setInt(3, 3);
+		            
+		            pstmt.executeUpdate();
+	            }
+	            
 	            System.out.println("Conectado correctamente.");
 	        } catch (SQLException e) {
 	            System.out.println("Error de conexión: " + e.getMessage());
