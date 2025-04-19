@@ -322,6 +322,7 @@ public class ControladorPrincipal {
 	public void modificarCita() {
 		
 		if (validarFormulario()) {
+			
 			if (citaSeleccionada != null) {
 				LocalTime horasyminutos = LocalTime.of(Integer.parseInt(inputHoras.getText()),
 						Integer.parseInt(inputMinutos.getText()));
@@ -329,10 +330,13 @@ public class ControladorPrincipal {
 				
 				Cita citaModificada = new Cita(citaSeleccionada.getId(), fecha, inputAsunto.getText(), inputLugar.getText()); 
 				CitaDAO.modificarCita(citaModificada);
+				
 			} else {
 				labelInfo.setText("Selecciona un registro");
 			}
 			
+			tableViewTablaCitas.getSelectionModel().clearSelection();
+			citaSeleccionada = null;
 			refrescarCitasYNotificaciones();
 		}
 	}
