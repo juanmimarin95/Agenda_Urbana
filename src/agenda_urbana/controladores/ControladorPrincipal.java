@@ -348,15 +348,17 @@ public class ControladorPrincipal {
 		configuracion.setNumDiasPreviosAviso(comboDiasAntelacionAvisar.getValue());
 		configuracion.setFrecuenciaAviso(comboTiempoCadaAviso.getValue());
 		
-		if(configuracion.isAvisar()) {
-			
-			periodicidadAlert();
-		}
 		ConfiguracionDAO.modificarConfiguracion(configuracion);
 		
 		labelConfigInfo.setText("Configuración guardada");
 		refrescarFormularioConfiguracion();
 		
+		if(configuracion.isAvisar()){
+			refrescarCitasYNotificaciones();
+			periodicidadAlert();
+		}else {
+			detenerTimeline();
+		}
 	}
 
 }
