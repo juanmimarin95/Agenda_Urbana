@@ -1,5 +1,8 @@
 package agenda_urbana.controladores;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -126,22 +129,42 @@ public class ControladorPrincipal {
 		}
 	}
 	
-	public void lanzarAlertCitasProximas (StringBuilder citasProximas) {
-		
-		String rutaSonidoAlerta = getClass().getResource("/notification-alert.mp3").toExternalForm();
-		AudioClip clip = new AudioClip(rutaSonidoAlerta);
-		
-		Alert alertaCitas = new Alert(AlertType.INFORMATION);
-		
-		alertaCitas.setTitle("Recordatorio de citas próximas");
-		alertaCitas.setHeaderText(null);
-		alertaCitas.setContentText(citasProximas.toString());
-		clip.play();
-		alertaCitas.show();
-		alertaCitas.setOnHidden(event -> {
-			alertMostrado = false;
-		});
-		
+	public void lanzarAlertCitasProximas(StringBuilder citasProximas) {
+	    try {
+	        // Cargar recurso como InputStream
+	        InputStream inputStream = getClass().getResourceAsStream("/notification-alert.mp3");
+	        if (inputStream == null) {
+	            System.out.println("El recurso MP3 no se encontró.");
+	            return;
+	        }
+
+	        // Crear archivo temporal
+	        File archivoTemporal = File.createTempFile("notification-alert", ".mp3");
+	        archivoTemporal.deleteOnExit();
+
+	        // Escribir el stream en el archivo temporal
+	        try (FileOutputStream outputStream = new FileOutputStream(archivoTemporal)) {
+	            byte[] buffer = new byte[1024];
+	            int bytesRead;
+	            while ((bytesRead = inputStream.read(buffer)) != -1) {
+	                outputStream.write(buffer, 0, bytesRead);
+	            }
+	        }
+
+	        // Usar AudioClip con la ruta absoluta del archivo temporal
+	        AudioClip clip = new AudioClip(archivoTemporal.toURI().toString());
+	        Alert alertaCitas = new Alert(Alert.AlertType.INFORMATION);
+
+	        alertaCitas.setTitle("Recordatorio de citas próximas");
+	        alertaCitas.setHeaderText(null);
+	        alertaCitas.setContentText(citasProximas.toString());
+	        clip.play();
+	        alertaCitas.show();
+	        alertaCitas.setOnHidden(event -> alertMostrado = false);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        System.out.println("Error al cargar y reproducir el MP3.");
+	    }
 	}
 	
 	public boolean compararFechas(Cita cita) {
